@@ -1,0 +1,29 @@
+{
+  "family": "blog-web-task",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::123456789012:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::123456789012:role/ecsTaskRole",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "containerDefinitions": [
+    {
+      "name": "blog-web",
+      "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/blog-web:latest",
+      "portMappings": [{ "containerPort": 5173, "protocol": "tcp" }],
+      "essential": true,
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "VITE_API_URL", "value": "https://your-backend-domain.com" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/ecs/blog-web",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

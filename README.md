@@ -282,6 +282,49 @@ VITE_APP_NAME=TheInkwell
 
 ---
 
+## ☁️ AWS Deploy (Quick)
+
+### Prerequisites
+- AWS account
+- ECR repositories: `blog-api`, `blog-web`
+- ECS cluster (Fargate)
+- RDS PostgreSQL/MySQL (or a database of your choice)
+- S3 bucket for uploads
+- IAM roles for ECS tasks and GitHub deploy
+
+### 1. GitHub Secrets
+- `AWS_ROLE_ARN`
+- `AWS_REGION` (e.g. us-east-1)
+- `AWS_ACCOUNT_ID`
+- `JWT_SECRET`
+- `DATABASE_URL`
+- `FRONTEND_URL`
+- `AWS_S3_BUCKET`
+
+### 2. Workflow trigger
+Push to `main` runs `.github/workflows/aws-ecs-deploy.yml`:
+- build/push backend to ECR
+- build/push frontend to ECR
+- force ECS update for services
+
+### 3. Backend env for ECS task
+- `NODE_ENV=production`
+- `PORT=4000`
+- `DATABASE_URL=${{ secrets.DATABASE_URL }}`
+- `JWT_SECRET=${{ secrets.JWT_SECRET }}`
+- `FRONTEND_URL=${{ secrets.FRONTEND_URL }}`
+- `AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}`
+
+### 4. Frontend env for ECS task
+- `NODE_ENV=production`
+- `VITE_API_URL=https://<your-backend-url>`
+
+### 5. Health Check
+- Backend: `GET /api/health`
+
+### 6. S3 upload logic
+Backend route `/api/uploads` uses S3 when `AWS_S3_BUCKET` is set, else local storage.
+
 ## 🛠️ Available Commands
 
 ```bash

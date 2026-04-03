@@ -1,0 +1,40 @@
+{
+  "family": "blog-api-task",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::123456789012:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::123456789012:role/ecsTaskRole",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "blog-api",
+      "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/blog-api:latest",
+      "portMappings": [{ "containerPort": 4000, "protocol": "tcp" }],
+      "essential": true,
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "PORT", "value": "4000" },
+        { "name": "FRONTEND_URL", "value": "https://your-frontend-domain.com" },
+        { "name": "DATABASE_URL", "value": "your-rds-connection-string" },
+        { "name": "JWT_SECRET", "value": "${JWT_SECRET}" },
+        { "name": "AWS_S3_BUCKET", "value": "your-s3-bucket" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/ecs/blog-api",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:4000/api/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}

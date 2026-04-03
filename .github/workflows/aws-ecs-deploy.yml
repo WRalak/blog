@@ -1,0 +1,56 @@
+name: AWS ECS Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push backend image
+        run: |
+          IMAGE=blog-api
+          ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
+          URI=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/$IMAGE:latest
+          docker build -t $IMAGE backend
+          docker tag $IMAGE $URI
+          docker push $URI
+
+      - name: Build and push frontend image
+        run: |
+          IMAGE=blog-web
+          ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
+          URI=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/$IMAGE:latest
+          docker build -t $IMAGE frontend
+          docker tag $IMAGE $URI
+          docker push $URI
+
+      - name: Update backend ECS service
+        run: |
+          CLUSTER_NAME=blog-cluster
+          SERVICE_NAME=blog-api-svc
+          ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
+          IMAGE_URI=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/blog-api:latest
+          aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment
+
+      - name: Update frontend ECS service
+        run: |
+          CLUSTER_NAME=blog-cluster
+          SERVICE_NAME=blog-web-svc
+          aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment
