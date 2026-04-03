@@ -15,11 +15,16 @@ app.use(express.json({ limit: '2mb' }));
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { error: 'Too many requests' } }));
 app.use('/api', rateLimit({ windowMs: 60 * 1000, max: 200 }));
 
+// Static uploads
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 // ── Routes
 app.use('/api/auth',       require('./routes/auth'));
 app.use('/api/posts',      require('./routes/posts'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/admin',      require('./routes/admin'));
+app.use('/api/uploads',    require('./routes/upload'));
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', time: new Date() }));

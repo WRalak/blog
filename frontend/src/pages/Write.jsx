@@ -13,6 +13,7 @@ export default function Write() {
   const [form, setForm] = useState(EMPTY);
   const [categories, setCategories] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(false);
 
@@ -39,6 +40,21 @@ export default function Write() {
   }
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const uploadCover = async (file) => {
+    if (!file) return;
+    setUploading(true); setError('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { url } = await api.upload('/uploads', formData);
+      set('cover_url', url);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = async (status) => {
     setSaving(true); setError('');
@@ -107,6 +123,12 @@ export default function Write() {
               <div className="form-group">
                 <label>Cover Image URL</label>
                 <input value={form.cover_url} onChange={e => set('cover_url', e.target.value)} placeholder="https://…" />
+              </div>
+              <div className="form-group">
+                <label>Upload Cover Image</label>
+                <input type="file" accept="image/*" onChange={e => uploadCover(e.target.files?.[0])} />
+                {uploading && <p style={{ color: 'var(--muted)', marginTop: '0.5rem' }}>Uploading…</p>}
+                {form.cover_url && <p style={{ color: 'var(--muted)', marginTop: '0.5rem' }}>Cover image set: <a href={form.cover_url} target="_blank" rel="noreferrer">preview</a></p>}
               </div>
             </div>
             <div className="form-group">
