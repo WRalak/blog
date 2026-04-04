@@ -36,4 +36,13 @@ app.use((err, _req, res, _next) => {
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`🚀 API running on http://localhost:${PORT}`));
+const server = app.listen(PORT, () => console.log(`🚀 API running on http://localhost:${PORT}`));
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`\n❌ Port ${PORT} is already in use.\n   • stop other node processes (taskkill /F /IM node.exe on Windows)\n   • or set a free port: PORT=5000 npm start\n`);
+    process.exit(1);
+  }
+  console.error('Express server error:', error);
+  process.exit(1);
+});
